@@ -2,7 +2,6 @@
   "name": "react-native-storekit",
   "version": "0.1.0",
   "description": "iOS In-App Purchase using the StoreKit framework",
-  "main": "RNStoreKit.ios.js",
   "author": {
     "name": "hansemannn",
     "email": "hans@hans-knoechel.de",
