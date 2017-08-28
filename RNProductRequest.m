@@ -34,6 +34,20 @@ RCT_EXPORT_METHOD(cancel)
   }
 }
 
+
+RCT_EXPORT_METHOD(requestProductsCustom:(NSArray *)ids
+                  callback:(RCTResponseSenderBlock)_callback)
+{
+    if (![SKPaymentQueue canMakePayments]) {
+        _callback(@[[NSNull null], @"In-app purchase is disabled. Please enable it to activate more features."]);
+        return;
+    }
+    request = [[SKProductsRequest alloc] initWithProductIdentifiers:ids];
+    request.delegate = self;
+    callback = _callback;
+    [request start];
+}
+
 #pragma mark Delegates
 
 - (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response
