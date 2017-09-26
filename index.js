@@ -3,7 +3,7 @@
  * @flow
  */
 'use strict';
-import { NativeModules } from 'react-native';
+import {NativeModules, Platform} from 'react-native';
 let NativeRNStoreKit = NativeModules.RNStoreKit;
 let NativeProductRequest = NativeModules.RNProductRequest;
 let NativeTransaction = NativeModules.RNTransaction;
@@ -52,4 +52,6 @@ class RNStoreKit{
   finish = () => NativeTransaction.finish();
 }
 
-module.exports = RNStoreKit;
+class RNStoreKitAndroid{}
+
+module.exports = Platform.OS === 'ios' ? RNStoreKit : RNStoreKitAndroid;
