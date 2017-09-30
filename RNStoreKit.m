@@ -63,7 +63,21 @@ RCT_EXPORT_METHOD(requestProducts:(NSArray *)ids
         return;
     }
     
-    resolve([[RNProductRequest alloc] initWithProductIdentifiers:[NSSet setWithArray:ids] callback:callback]);
+    //resolve([[RNProductRequest alloc] initWithProductIdentifiers:[NSSet setWithArray:ids] callback:callback]);
+}
+RCT_EXPORT_METHOD(requestProductsCustom:(NSArray *)ids
+                  callback:(RCTResponseSenderBlock)_callback)
+{
+    if (![SKPaymentQueue canMakePayments]) {
+        NSLog(@"------------需要开启-----------------");
+        return;
+    }
+    //[[RNProductRequest alloc] initWithProductIdentifiers:[NSSet setWithArray:ids] callback:callback];
+    request = [[SKProductsRequest alloc] initWithProductIdentifiers:ids];
+    request.delegate = self;
+    refreshReceiptCallback = _callback;
+    NSLog(@"------------start-----------------");
+    [request start];
 }
 
 RCT_EXPORT_METHOD(purchase:(NSDictionary *)args)
@@ -186,6 +200,14 @@ RCT_EXPORT_METHOD(setAutoFinishTransactions:(NSString *)_autoFinishTransactions)
 {
     autoFinishTransactions = _autoFinishTransactions;
 }
+#pragma mark Public API
+
+RCT_EXPORT_METHOD(cancel)
+{
+    if (request != nil) {
+        [request cancel];
+    }
+}
 
 #pragma mark Delegates
 
@@ -195,7 +217,7 @@ RCT_EXPORT_METHOD(setAutoFinishTransactions:(NSString *)_autoFinishTransactions)
                            @YES,@"success",
                            nil];
     
-    refreshReceiptCallback(@[event]);
+    //refreshReceiptCallback(@[event]);
 }
 
 - (void)request:(SKRequest *)request didFailWithError:(NSError *)error
@@ -365,5 +387,29 @@ RCT_EXPORT_METHOD(setAutoFinishTransactions:(NSString *)_autoFinishTransactions)
     }
     return dls;
 }
+#pragma mark Delegates
+
+- (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response
+{
+    NSMutableArray *good = [NSMutableArray arrayWithCapacity:[[response products]count]];
+    
+    for (SKProduct * product in [response products]) {
+        RNProduct *p = [[RNProduct alloc] initWithProduct:product];
+        [good addObject:p];
+    }
+    
+    NSMutableDictionary *event = [[NSMutableDictionary alloc] init];
+    
+    [event setObject:good forKey:@"products"];
+    [event setObject:@YES forKey:@"success"];
+    
+    NSArray *invalid = [response invalidProductIdentifiers];
+    if (invalid != nil && [invalid count] > 0) {
+        [event setObject:invalid forKey:@"invalid"];
+    }
+    
+    refreshReceiptCallback(@[event]);
+}
+
 
 @end

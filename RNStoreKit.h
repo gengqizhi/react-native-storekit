@@ -12,6 +12,7 @@
     NSMutableArray *restoredTransactions;
     NSString *bundleVersion;
     NSString *bundleIdentifier;
+    SKProductsRequest *request;
 }
 
 @end

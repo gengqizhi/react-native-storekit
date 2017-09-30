@@ -3,7 +3,7 @@
  * @flow
  */
 'use strict';
-import {NativeModules, Platform} from 'react-native';
+import { NativeModules } from 'react-native';
 let NativeRNStoreKit = NativeModules.RNStoreKit;
 let NativeProductRequest = NativeModules.RNProductRequest;
 let NativeTransaction = NativeModules.RNTransaction;
@@ -11,12 +11,20 @@ let NativeTransaction = NativeModules.RNTransaction;
 class RNStoreKit{
   constructor(ids, callback){
     //自定义请求的产品
-    NativeProductRequest.requestProductsCustom(ids, (response,error)=>callback(response,error));
+    //NativeProductRequest.requestProductsCustom(ids, (response,error)=>callback(response,error));
   }
   //NativeProductRequest\\
   //取消
-  cancel = () => NativeProductRequest.cancel();
+  cancel = () => NativeRNStoreKit.cancel();
   //NativeRNStoreKit\\
+  //请求产品
+  requestProducts = (ids, callback) => {
+    NativeRNStoreKit.requestProducts(ids, callback);
+  }
+  //请求产品
+  requestProductsCustom = (ids, callback) => {
+    NativeRNStoreKit.requestProductsCustom(ids, (response,error)=>callback(response,error));
+  }
   //购买 purchaseData: {product:'',quantity: num,applicationUsername:'applicationUsername'}
   purchase = (purchaseData) => NativeRNStoreKit.purchase(purchaseData);
   //刷新收据
@@ -52,6 +60,4 @@ class RNStoreKit{
   finish = () => NativeTransaction.finish();
 }
 
-class RNStoreKitAndroid{}
-
-module.exports = Platform.OS === 'ios' ? RNStoreKit : RNStoreKitAndroid;
+module.exports = RNStoreKit;
