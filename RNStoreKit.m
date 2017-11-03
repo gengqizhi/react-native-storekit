@@ -121,7 +121,29 @@ RCT_EXPORT_METHOD(receiptExists:(RCTPromiseResolveBlock)resolve rejecter:(RCTPro
 {
     NSURL *receiptURL = [[NSBundle mainBundle] appStoreReceiptURL];
     NSLog(@"[receiptURL]: %@", receiptURL);
-    resolve(@[[NSNumber numberWithBool:[[NSFileManager defaultManager] fileExistsAtPath:receiptURL.path]]]);
+    if ([[NSFileManager defaultManager] fileExistsAtPath:receiptURL.path]) {
+        NSData *receiptData = [NSData dataWithContentsOfURL:receiptURL];
+        NSURL *url = [NSURL URLWithString:receiptVerificationSandbox?@"https://sandbox.itunes.apple.com/verifyReceipt":@"https://buy.itunes.apple.com/verifyReceipt"];
+        NSMutableURLRequest *urlRequest =
+        [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:10.0f];
+        urlRequest.HTTPMethod = @"POST";
+        NSString *encodeStr = [receiptData base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed];
+        NSString *payload = [NSString stringWithFormat:@"{\"receipt-data\" : \"%@\"}", encodeStr];
+        NSData *payloadData = [payload dataUsingEncoding:NSUTF8StringEncoding];
+        urlRequest.HTTPBody = payloadData;
+        NSData *result = [NSURLConnection sendSynchronousRequest:urlRequest returningResponse:nil error:nil];
+        if (result == nil) {
+            NSLog(@"验证失败");
+            resolve(@[[NSNumber numberWithBool:NO]]);
+        }
+        NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:result options:NSJSONReadingAllowFragments error:nil];
+        if (dict != nil) {
+            NSLog(@"验证成功！购买的商品是：%@", @"_productName");
+            resolve(@[[NSNumber numberWithBool:YES]]);
+        }
+    }else{
+        resolve(@[[NSNumber numberWithBool:NO]]);
+    }
 }
 
 RCT_EXPORT_METHOD(canMakePayments:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
